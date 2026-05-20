@@ -1392,40 +1392,28 @@ class AutoFlowGUI:
         # ---- 右侧: 历史 + AI 润色 + 分隔线 + 运行 + 停止 ----
 
         ctk.CTkButton(inner, text="⏱ 历史", font=FONTS['small'],
-
                        fg_color=COLORS['bg_input'],
-
                        hover_color=COLORS['bg_card_hover'],
-
                        text_color=COLORS['text_secondary'],
-
                        border_color=COLORS['border_color'],
-
                        border_width=1,
-
                        corner_radius=SIZES['radius_sm'],
-
                        width=90, height=32,
-
-                       command=self.show_history).pack(side='right', padx=(0, 8))
+                       command=self.show_history).pack(side='left', padx=(8, 0))
 
 
 
         # 设计图: btn-accent 蓝紫色 AI 润色按钮
 
         ctk.CTkButton(inner, text="★ AI 润色", font=FONTS['small'],
-
                        fg_color=COLORS['accent_primary'],
-
                        hover_color=COLORS['accent_primary_hover'],
-
                        text_color='white',
-
                        corner_radius=SIZES['radius_sm'],
-
                        width=100, height=32,
+                       command=self.ai_polish).pack(side='left', padx=(8, 0))
 
-                       command=self.ai_polish).pack(side='right')
+        # ---- 右侧: 分隔线 + 运行 + 停止 ----
 
 
 
@@ -1435,7 +1423,7 @@ class AutoFlowGUI:
 
                          highlightthickness=0)
 
-        sep2.pack(side='right', padx=12)
+        sep2.pack(side='left', padx=12)
 
 
 
@@ -1451,31 +1439,22 @@ class AutoFlowGUI:
 
                                        corner_radius=SIZES['radius_sm'],
 
-                                       width=100, height=36,
-
+                                       width=200, height=36,
                                        state='disabled',
-
                                        command=self.stop_run)
 
-        self.stop_btn.pack(side='right', padx=(0, 8))
-
-
+        self.stop_btn.pack(side='left', padx=(0, 8))
 
         self.run_btn = ctk.CTkButton(inner, text="▶ 运行", font=FONTS['body'],
-
                                       fg_color=COLORS['accent_green'],
-
                                       hover_color=COLORS['accent_green_hover'],
-
                                       text_color='white',
-
                                       corner_radius=SIZES['radius_sm'],
-
-                                      width=100, height=36,
+                                      width=200, height=36,
 
                                       command=self.start_run)
 
-        self.run_btn.pack(side='right')
+        self.run_btn.pack(side='left')
 
 
 
