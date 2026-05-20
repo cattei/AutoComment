@@ -1,0 +1,28 @@
+{
+  "base_url": "",
+  "model": "autoglm-phone",
+  "apikey": "",
+  "task": "【点赞评论操作】\n1. 打开微信，点击底部\"发现\" → \"朋友圈\"，等待加载完成。\n2. 下拉刷新，浏览朋友圈信息流。\n3. 随机选择一条未操作过的朋友圈动态。\n4. 阅读动态内容（文字、图片、视频等），理解核心意思。\n5. 点击该动态右下角的\"两个点\"（···）图标。\n6. 在弹出的菜单中点击\"赞\"（爱心图标），等待点赞成功（图标高亮）。\n7. 再次点击该动态右下角的\"两个点\"（···）图标。\n8. 在弹出的菜单中点击\"评论\"，底部弹出评论输入框。\n9. 撰写包含文字的评论（可点击输入框右侧表情图标添加表情）。\n10. 点击\"发送\"按钮，等待发送成功提示。",
+  "max_steps": 200,
+  "temperature": 0.2,
+  "device_type": "adb",
+  "selected_device": "",
+  "remote_connection": {
+    "ip": "192.168.1.100",
+    "port": "5555"
+  },
+  "wireless_pair": {
+    "pair_address": "10.10.10.100:41717",
+    "connect_address": "10.10.10.100:5555"
+  },
+  "legacy_wireless": {
+    "ip": "192.168.1.100",
+    "port": "5555"
+  },
+  "ios_device_ip": "localhost",
+  "platform": "微信朋友圈",
+  "operation_checkpoint": true,
+  "operation_comment": true,
+  "operation_collect": false,
+  "operation_follow": false
+}

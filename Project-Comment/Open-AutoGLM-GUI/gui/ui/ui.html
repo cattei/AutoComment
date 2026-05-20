@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoFlow - 智能自动化助手</title>
+    <style>
+        /* ===== Reset & Base ===== */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-primary: #0f1117;
+            --bg-secondary: #1a1d27;
+            --bg-card: #1e2130;
+            --bg-card-hover: #252839;
+            --bg-input: #161923;
+            --bg-console: #0a0c12;
+            --border-color: #2a2d3e;
+            --border-focus: #6366f1;
+            --text-primary: #e4e6f0;
+            --text-secondary: #8b8fa7;
+            --text-muted: #5c6078;
+            --accent-primary: #6366f1;
+            --accent-primary-hover: #7577f5;
+            --accent-primary-glow: rgba(99, 102, 241, 0.15);
+            --accent-green: #22c55e;
+            --accent-green-hover: #16a34a;
+            --accent-green-glow: rgba(34, 197, 94, 0.15);
+            --accent-red: #ef4444;
+            --accent-red-hover: #dc2626;
+            --accent-red-glow: rgba(239, 68, 68, 0.15);
+            --accent-amber: #f59e0b;
+            --accent-amber-glow: rgba(245, 158, 11, 0.15);
+            --accent-cyan: #06b6d4;
+            --accent-cyan-glow: rgba(6, 182, 212, 0.15);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --transition: all 0.2s ease;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ===== Scrollbar ===== */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* ===== App Container ===== */
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-height: 100vh;
+        }
+
+        /* ===== Header ===== */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent-primary), #a855f7);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: -2px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            box-shadow: 0 0 6px var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .header-time {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ===== Main Content ===== */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 16px;
+            padding: 16px 24px;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        /* ===== Card ===== */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            border-color: #3a3d52;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .card-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .card-icon.blue { background: var(--accent-primary-glow); color: var(--accent-primary); }
+        .card-icon.green { background: var(--accent-green-glow); color: var(--accent-green); }
+        .card-icon.amber { background: var(--accent-amber-glow); color: var(--accent-amber); }
+        .card-icon.cyan { background: var(--accent-cyan-glow); color: var(--accent-cyan); }
+        .card-icon.red { background: var(--accent-red-glow); color: var(--accent-red); }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-body {
+            padding: 16px 18px;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+
+        /* ===== Left Panel ===== */
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-height: 0;
+        }
+
+        /* ===== Procedure Area ===== */
+        .procedure-area {
+            flex: 1;
+            min-height: 0;
+        }
+
+        .procedure-area .card-body {
+            padding: 0;
+            position: relative;
+        }
+
+        /* ===== View Toggle ===== */
+        .view-toggle {
+            display: flex;
+            align-items: center;
+            background: var(--bg-input);
+            border-radius: var(--radius-sm);
+            padding: 3px;
+            border: 1px solid var(--border-color);
+        }
+
+        .view-toggle-btn {
+            padding: 5px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        .view-toggle-btn:hover {
+            color: var(--text-secondary);
+        }
+
+        .view-toggle-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            box-shadow: 0 1px 4px rgba(99, 102, 241, 0.3);
+        }
+
+        .view-toggle-btn svg {
+            width: 13px;
+            height: 13px;
+        }
+
+        /* ===== View Panels ===== */
+        .view-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .view-panel.hidden {
+            opacity: 0;
+            transform: translateY(8px);
+            pointer-events: none;
+        }
+
+        .view-panel.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        /* ===== Steps View ===== */
+        .steps-view {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            padding: 16px 18px;
+        }
+
+        .step-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .step-item:hover {
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .step-item.active {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .step-item.completed .step-number {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .step-item.completed .step-number svg {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .step-item.running .step-number {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            animation: stepPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes stepPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+            50% { box-shadow: 0 0 0 6px rgba(99, 102, 241, 0); }
+        }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .step-number svg {
+            width: 12px;
+            height: 12px;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: var(--transition);
+            position: absolute;
+        }
+
+        .step-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            padding-top: 2px;
+        }
+
+        .step-item.active .step-text,
+        .step-item.running .step-text {
+            color: var(--text-primary);
+        }
+
+        .step-item.completed .step-text {
+            color: var(--text-secondary);
+        }
+
+        /* ===== Command View ===== */
+        .command-view {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            background: var(--bg-console);
+            padding: 14px 16px;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .cmd-line {
+            display: flex;
+            gap: 8px;
+            padding: 1px 0;
+            animation: cmdFadeIn 0.3s ease;
+        }
+
+        @keyframes cmdFadeIn {
+            from { opacity: 0; transform: translateX(-4px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .cmd-time {
+            color: var(--text-muted);
+            flex-shrink: 0;
+            user-select: none;
+        }
+
+        .cmd-prefix {
+            color: var(--accent-green);
+            flex-shrink: 0;
+            user-select: none;
+        }
+
+        .cmd-prefix.think {
+            color: var(--accent-amber);
+        }
+
+        .cmd-prefix.action {
+            color: var(--accent-cyan);
+        }
+
+        .cmd-prefix.ai {
+            color: var(--accent-primary);
+        }
+
+        .cmd-text {
+            color: var(--text-secondary);
+            word-break: break-all;
+        }
+
+        .cmd-text.highlight {
+            color: var(--text-primary);
+        }
+
+        .cmd-divider {
+            color: var(--text-muted);
+            opacity: 0.4;
+            padding: 4px 0;
+            user-select: none;
+        }
+
+        .cmd-cursor {
+            display: inline-block;
+            width: 7px;
+            height: 14px;
+            background: var(--accent-green);
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* ===== Collapsed Steps Summary ===== */
+        .steps-collapsed-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 18px;
+            background: var(--bg-input);
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .steps-collapsed-bar:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .steps-collapsed-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .steps-collapsed-info .step-progress-mini {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .steps-collapsed-info .step-progress-mini .mini-done {
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        .steps-collapsed-info .step-progress-mini .mini-total {
+            color: var(--text-muted);
+        }
+
+        .steps-collapsed-bar .expand-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .steps-collapsed-bar .expand-hint svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* ===== Config Row ===== */
+        .config-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .config-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .config-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .config-label span {
+            color: var(--text-muted);
+            font-weight: 400;
+            font-size: 11px;
+        }
+
+        /* ===== Select ===== */
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-wrapper::after {
+            content: '▾';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 12px;
+            pointer-events: none;
+        }
+
+        select {
+            width: 100%;
+            padding: 9px 32px 9px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            transition: var(--transition);
+        }
+
+        select:hover { border-color: #3a3d52; }
+        select:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 3px var(--accent-primary-glow); }
+
+        /* ===== Input ===== */
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 9px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 13px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        input:hover { border-color: #3a3d52; }
+        input:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 3px var(--accent-primary-glow); }
+
+        /* ===== Checkbox Group ===== */
+        .checkbox-group {
+            display: flex;
+            gap: 16px;
+            padding-top: 4px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            display: none;
+        }
+
+        .custom-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .custom-checkbox svg {
+            width: 12px;
+            height: 12px;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: var(--transition);
+        }
+
+        .checkbox-item input:checked + .custom-checkbox {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .checkbox-item input:checked + .custom-checkbox svg {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .checkbox-item:hover .custom-checkbox {
+            border-color: var(--accent-primary);
+        }
+
+        .checkbox-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* ===== Right Panel ===== */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-height: 0;
+        }
+
+        /* ===== Device Card ===== */
+        .device-card {
+            flex-shrink: 0;
+        }
+
+        .device-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .device-action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 6px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-size: 11px;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .device-action-btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+        }
+
+        .device-action-btn svg {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
+
+        .device-select-area {
+            margin-top: 12px;
+        }
+
+        .device-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: var(--bg-input);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .device-name {
+            font-size: 12px;
+            color: var(--text-primary);
+            font-family: 'Cascadia Code', monospace;
+        }
+
+        .device-status {
+            font-size: 11px;
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .device-status::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--accent-green);
+            border-radius: 50%;
+        }
+
+        /* ===== Stats Card ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-item {
+            padding: 12px;
+            background: var(--bg-input);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat-value.green { color: var(--accent-green); }
+        .stat-value.blue { color: var(--accent-primary); }
+        .stat-value.amber { color: var(--accent-amber); }
+        .stat-value.cyan { color: var(--accent-cyan); }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* ===== Console Card ===== */
+        .console-card {
+            flex: 1;
+            min-height: 0;
+        }
+
+        .console-card .card-body {
+            padding: 0;
+            background: var(--bg-console);
+        }
+
+        .console-output {
+            width: 100%;
+            height: 100%;
+            padding: 14px 16px;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-size: 12px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .console-output .log-time {
+            color: var(--text-muted);
+            margin-right: 8px;
+        }
+
+        .console-output .log-info { color: var(--accent-cyan); }
+        .console-output .log-success { color: var(--accent-green); }
+        .console-output .log-warning { color: var(--accent-amber); }
+        .console-output .log-error { color: var(--accent-red); }
+        .console-output .log-step { color: var(--accent-primary); }
+
+        .console-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            border-top: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .console-footer-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .console-footer-right {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ===== Toolbar ===== */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toolbar-divider {
+            width: 1px;
+            height: 28px;
+            background: var(--border-color);
+            margin: 0 6px;
+        }
+
+        .toolbar-spacer {
+            flex: 1;
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 9px 18px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        .btn-primary {
+            background: var(--accent-green);
+            color: white;
+            box-shadow: 0 2px 10px rgba(34, 197, 94, 0.3);
+        }
+        .btn-primary:hover {
+            background: var(--accent-green-hover);
+            box-shadow: 0 4px 16px rgba(34, 197, 94, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: var(--accent-red);
+            color: white;
+            box-shadow: 0 2px 10px rgba(239, 68, 68, 0.3);
+        }
+        .btn-danger:hover {
+            background: var(--accent-red-hover);
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+        .btn-ghost:hover {
+            background: var(--bg-card-hover);
+            border-color: #3a3d52;
+            color: var(--text-primary);
+        }
+
+        .btn-accent {
+            background: var(--accent-primary);
+            color: white;
+            box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+        }
+        .btn-accent:hover {
+            background: var(--accent-primary-hover);
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-sm {
+            padding: 7px 12px;
+            font-size: 12px;
+        }
+
+        .btn-sm svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* ===== Progress Bar ===== */
+        .progress-section {
+            flex-shrink: 0;
+        }
+
+        .progress-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .progress-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .progress-value {
+            font-size: 12px;
+            color: var(--accent-primary);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-input);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), #a855f7);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        /* ===== Tooltip ===== */
+        [data-tooltip] {
+            position: relative;
+        }
+
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            padding: 5px 10px;
+            background: #2a2d3e;
+            color: var(--text-primary);
+            font-size: 11px;
+            border-radius: 4px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition);
+            z-index: 100;
+        }
+
+        [data-tooltip]:hover::after {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+        }
+
+        /* ===== Animations ===== */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card { animation: fadeIn 0.3s ease; }
+        .card:nth-child(2) { animation-delay: 0.05s; }
+        .card:nth-child(3) { animation-delay: 0.1s; }
+
+        /* ===== Running State ===== */
+        .btn-primary.running {
+            animation: glow 1.5s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 2px 10px rgba(34, 197, 94, 0.3); }
+            50% { box-shadow: 0 2px 20px rgba(34, 197, 94, 0.6); }
+        }
+
+        /* ===== Temperature Slider ===== */
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 6px rgba(99, 102, 241, 0.4);
+            transition: var(--transition);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.6);
+        }
+
+        .slider-value {
+            font-size: 13px;
+            color: var(--accent-primary);
+            font-weight: 600;
+            min-width: 32px;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ===== Config loaded indicator ===== */
+        .config-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .config-indicator.loaded { color: var(--accent-green); }
+
+        .config-indicator svg {
+            width: 14px;
+            height: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- ===== Header ===== -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">A</div>
+                <div>
+                    <div class="header-title">AutoFlow</div>
+                    <div class="header-subtitle">智能自动化助手 v2.0</div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="status-badge">
+                    <div class="status-dot"></div>
+                    <span>设备已连接</span>
+                </div>
+                <div class="header-time" id="headerTime">2025-04-08 15:32:14</div>
+            </div>
+        </header>
+
+        <!-- ===== Main Content ===== -->
+        <div class="main-content">
+            <!-- Left Panel -->
+            <div class="left-panel">
+                <!-- Procedure Card -->
+                <div class="card procedure-area">
+                    <div class="card-header">
+                        <div class="card-header-left">
+                            <div class="card-icon blue">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                            </div>
+                            <span class="card-title">自动化流程配置</span>
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <!-- View Toggle -->
+                            <div class="view-toggle" id="viewToggle">
+                                <button class="view-toggle-btn active" id="toggleSteps" onclick="switchView('steps')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                                    步骤
+                                </button>
+                                <button class="view-toggle-btn" id="toggleCmd" onclick="switchView('cmd')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                                    命令
+                                </button>
+                            </div>
+                            <button class="btn btn-ghost btn-sm" data-tooltip="模板库" onclick="showTemplates()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Collapsed steps bar (visible when running & in cmd view) -->
+                    <div class="steps-collapsed-bar" id="stepsCollapsedBar" style="display:none;" onclick="switchView('steps')">
+                        <div class="steps-collapsed-info">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;color:var(--accent-primary);"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                            <span>任务步骤</span>
+                            <div class="step-progress-mini">
+                                <span class="mini-done" id="collapsedDone">0</span>
+                                <span class="mini-total">/ <span id="collapsedTotal">12</span> 步</span>
+                            </div>
+                        </div>
+                        <div class="expand-hint">
+                            <span>展开</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <!-- Steps View -->
+                        <div class="view-panel visible" id="stepsView">
+                            <div class="steps-view" id="stepsContainer">
+                                <ul class="step-list" id="stepList">
+                                    <li class="step-item" data-step="1">
+                                        <div class="step-number">1<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                        <div class="step-text">打开小红书APP，等待首页加载完成</div>
+                                    </li>
+                                    <li class="step-item" data-step="2">
+                                        <div class="step-number">2<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                        <div class="step-text">点击「发现」标签页，进入发现页面</div>
+                                    </li>
+                                    <li class="step-item" data-step="3">
+                                        <div class="step-number">3<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                        <div class="step-text">在发现页面下滑，刷新推荐内容列表</div>
+                                    </li>
+                                    <li class="step-item" data-step="4">
+                                        <div class="step-number">4<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                        <div class="step-text">从列表中随机选择一篇未浏览过的笔记</div>
+                                    </li>
+                                    <li class="step-item" data-step="5">
+                                        <div class="step-number">5<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                        <div class="step-text">点击进入笔记详情页，等待内容加载</div>
+                                    </li>
+                                    <li class="step-item" data-step="6">
+                                        <div class="step-number">6<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                        <div class="step-text">阅读笔记内容（标题、正文、图片/视频），进行内容摘要</div>
+                                    </li>
+                                    <li class="step-item" data-step="7">
+                                        <div class="step-number">7<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                        <div class="step-text">滑动到评论区，等待评论加载完成</div>
+                                    </li>
+                                    <li class="step-item" data-step="8">
+                                        <div class="step-number">8<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                        <div class="step-text">浏览已有评论，总结评论的主要观点和话题</div>
+                                    </li>
+                                    <li class="step-item" data-step="9">
+                                        <div class="step-number">9<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                        <div class="step-text">点击评论输入框，基于笔记内容和评论上下文，生成一条AI评论（包含文字和适当的emoji表情）</div>
+                                    </li>
+                                    <li class="step-item" data-step="10">
+                                        <div class="step-number">10<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                        <div class="step-text">点击发送按钮，确认评论发送成功</div>
+                                    </li>
+                                    <li class="step-item" data-step="11">
+                                        <div class="step-number">11<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                        <div class="step-text">返回发现页面，准备下一次操作</div>
+                                    </li>
+                                    <li class="step-item" data-step="12">
+                                        <div class="step-number">12<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                        <div class="step-text">重复步骤 3-11，共执行 <span style="color:var(--accent-primary);font-weight:600;">20</span> 次</div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Command View -->
+                        <div class="view-panel hidden" id="cmdView">
+                            <div class="command-view" id="commandOutput">
+                                <div class="cmd-line">
+                                    <span class="cmd-time">[系统]</span>
+                                    <span class="cmd-text" style="color:var(--text-muted);">等待任务启动，命令输出将在此显示...</span>
+                                </div>
+                                <div class="cmd-line">
+                                    <span class="cmd-text"><span class="cmd-cursor"></span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Config Row -->
+                <div class="config-row">
+                    <div class="config-item">
+                        <label class="config-label">平台选择 <span>(选择操作平台)</span></label>
+                        <div class="select-wrapper">
+                            <select id="platformSelect">
+                                <option value="xiaohongshu" selected>小红书</option>
+                                <option value="douyin">抖音</option>
+                                <option value="weibo">微博</option>
+                                <option value="bilibili">B站</option>
+                                <option value="kuaishou">快手</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="config-item">
+                        <label class="config-label">最大步数 <span>(每个任务最大执行步数)</span></label>
+                        <input type="number" id="maxSteps" value="20000" min="100" max="100000">
+                    </div>
+                    <div class="config-item">
+                        <label class="config-label">温度值 <span>(控制随机性: 0.0-1.0)</span></label>
+                        <div class="slider-container">
+                            <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.2" oninput="updateTempValue(this.value)">
+                            <span class="slider-value" id="tempValue">0.2</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Operation Type -->
+                <div class="config-item" style="flex-shrink:0;">
+                    <label class="config-label">操作类型</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="opLike" checked>
+                            <div class="custom-checkbox">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            </div>
+                            <span class="checkbox-text">👍 点赞</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="opComment">
+                            <div class="custom-checkbox">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            </div>
+                            <span class="checkbox-text">💬 评论</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="opCollect">
+                            <div class="custom-checkbox">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            </div>
+                            <span class="checkbox-text">⭐ 收藏</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="opFollow">
+                            <div class="custom-checkbox">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            </div>
+                            <span class="checkbox-text">➕ 关注</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="right-panel">
+                <!-- Device Management -->
+                <div class="card device-card">
+                    <div class="card-header">
+                        <div class="card-header-left">
+                            <div class="card-icon cyan">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                            </div>
+                            <span class="card-title">ADB 设备管理</span>
+                        </div>
+                        <div class="select-wrapper" style="width:100px;">
+                            <select id="deviceType" style="padding:6px 28px 6px 8px;font-size:12px;">
+                                <option value="android" selected>安卓</option>
+                                <option value="ios">iOS</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="device-actions">
+                            <button class="device-action-btn" onclick="refreshDevices()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                                刷新设备
+                            </button>
+                            <button class="device-action-btn" onclick="connectDevice()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                                连接设备
+                            </button>
+                            <button class="device-action-btn" onclick="deviceDetails()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                设备详情
+                            </button>
+                            <button class="device-action-btn" onclick="installKeyboard()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                安装键盘
+                            </button>
+                            <button class="device-action-btn" onclick="remoteDesktop()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                                远程桌面
+                            </button>
+                            <button class="device-action-btn" onclick="screenshot()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                截图
+                            </button>
+                        </div>
+                        <div class="device-select-area">
+                            <label class="config-label" style="margin-bottom:6px;display:block;">选择设备</label>
+                            <div class="device-info">
+                                <span class="device-name">aaucrkg67pswu8qw</span>
+                                <span class="device-status">已连接</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-header-left">
+                            <div class="card-icon amber">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                            </div>
+                            <span class="card-title">运行统计</span>
+                        </div>
+                    </div>
+                    <div class="card-body" style="padding:14px 16px;">
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value green" id="statLikes">0</div>
+                                <div class="stat-label">点赞次数</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value blue" id="statComments">0</div>
+                                <div class="stat-label">评论次数</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value amber" id="statCollects">0</div>
+                                <div class="stat-label">收藏次数</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value cyan" id="statFollows">0</div>
+                                <div class="stat-label">关注次数</div>
+                            </div>
+                        </div>
+                        <!-- Progress -->
+                        <div style="margin-top:14px;">
+                            <div class="progress-header">
+                                <span class="progress-label">任务进度</span>
+                                <span class="progress-value" id="progressText">0 / 20</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Console -->
+                <div class="card console-card">
+                    <div class="card-header">
+                        <div class="card-header-left">
+                            <div class="card-icon green">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                            </div>
+                            <span class="card-title">输出控制台</span>
+                        </div>
+                        <button class="btn btn-ghost btn-sm" onclick="clearConsole()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            清空
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="console-output" id="consoleOutput"></div>
+                    </div>
+                    <div class="console-footer">
+                        <div class="console-footer-left">
+                            <div class="config-indicator loaded" id="configIndicator">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                <span>配置已加载</span>
+                            </div>
+                        </div>
+                        <div class="console-footer-right" id="consoleTime"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Toolbar ===== -->
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <button class="btn btn-primary" id="runBtn" onclick="toggleRun()">
+                    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    运行
+                </button>
+                <button class="btn btn-danger" id="stopBtn" onclick="stopRun()" disabled style="opacity:0.5;">
+                    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+                    停止
+                </button>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <div class="toolbar-group">
+                <button class="btn btn-ghost" data-tooltip="自动唤醒/解锁" onclick="wakeDevice()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    唤醒
+                </button>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <div class="toolbar-group">
+                <button class="btn btn-ghost" data-tooltip="保存当前配置" onclick="saveConfig()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    保存配置
+                </button>
+                <button class="btn btn-ghost" data-tooltip="加载已保存配置" onclick="loadConfig()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                    加载配置
+                </button>
+            </div>
+
+            <div class="toolbar-spacer"></div>
+
+            <div class="toolbar-group">
+                <button class="btn btn-accent" data-tooltip="AI智能润色流程文本" onclick="aiPolish()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    AI 润色
+                </button>
+                <button class="btn btn-ghost" data-tooltip="查看操作历史记录" onclick="showHistory()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    历史
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== State =====
+        let isRunning = false;
+        let runInterval = null;
+        let stats = { likes: 0, comments: 0, collects: 0, follows: 0 };
+        let currentStep = 0;
+        let currentLoopStep = 0; // which step within the 12-step cycle
+        const totalSteps = 20;
+        const totalProcedureSteps = 12;
+        let currentView = 'steps'; // 'steps' or 'cmd'
+
+        // ===== Init =====
+        document.addEventListener('DOMContentLoaded', () => {
+            updateClock();
+            setInterval(updateClock, 1000);
+            logMessage('系统初始化完成', 'info');
+            logMessage('ADB 扫描完成, 发现 1 台设备', 'success');
+            logMessage('设备 aaucrkg67pswu8qw 已连接', 'info');
+            logMessage('配置文件已自动加载', 'success');
+        });
+
+        // ===== Clock =====
+        function updateClock() {
+            const now = new Date();
+            const fmt = (n) => String(n).padStart(2, '0');
+            const str = `${now.getFullYear()}-${fmt(now.getMonth()+1)}-${fmt(now.getDate())} ${fmt(now.getHours())}:${fmt(now.getMinutes())}:${fmt(now.getSeconds())}`;
+            document.getElementById('headerTime').textContent = str;
+            document.getElementById('consoleTime').textContent = str;
+        }
+
+        // ===== Temperature =====
+        function updateTempValue(val) {
+            document.getElementById('tempValue').textContent = parseFloat(val).toFixed(1);
+        }
+
+        // ===== View Toggle =====
+        function switchView(view) {
+            currentView = view;
+            const stepsView = document.getElementById('stepsView');
+            const cmdView = document.getElementById('cmdView');
+            const toggleSteps = document.getElementById('toggleSteps');
+            const toggleCmd = document.getElementById('toggleCmd');
+            const collapsedBar = document.getElementById('stepsCollapsedBar');
+
+            if (view === 'steps') {
+                stepsView.classList.remove('hidden');
+                stepsView.classList.add('visible');
+                cmdView.classList.remove('visible');
+                cmdView.classList.add('hidden');
+                toggleSteps.classList.add('active');
+                toggleCmd.classList.remove('active');
+                collapsedBar.style.display = 'none';
+            } else {
+                cmdView.classList.remove('hidden');
+                cmdView.classList.add('visible');
+                stepsView.classList.remove('visible');
+                stepsView.classList.add('hidden');
+                toggleCmd.classList.add('active');
+                toggleSteps.classList.remove('active');
+                // Show collapsed bar when running
+                if (isRunning) {
+                    collapsedBar.style.display = 'flex';
+                }
+            }
+        }
+
+        // ===== Command Output =====
+        function addCmdLine(text, type = 'cmd') {
+            const output = document.getElementById('commandOutput');
+            // Remove cursor line
+            const cursorLine = output.querySelector('.cmd-cursor');
+            if (cursorLine) {
+                const parentLine = cursorLine.closest('.cmd-line');
+                if (parentLine) parentLine.remove();
+            }
+
+            const now = new Date();
+            const fmt = (n) => String(n).padStart(2, '0');
+            const time = `${fmt(now.getHours())}:${fmt(now.getMinutes())}:${fmt(now.getSeconds())}`;
+
+            const prefixMap = {
+                'cmd': { cls: '', text: '>' },
+                'think': { cls: 'think', text: '?' },
+                'action': { cls: 'action', text: '→' },
+                'ai': { cls: 'ai', text: '★' },
+                'success': { cls: '', text: '✓' },
+                'error': { cls: '', text: '✗' },
+                'divider': { cls: '', text: '─' },
+                'system': { cls: '', text: '#' },
+            };
+
+            const prefix = prefixMap[type] || prefixMap['cmd'];
+
+            const line = document.createElement('div');
+            line.className = 'cmd-line';
+
+            if (type === 'divider') {
+                line.innerHTML = `<span class="cmd-divider">${text}</span>`;
+            } else {
+                line.innerHTML = `<span class="cmd-time">${time}</span><span class="cmd-prefix ${prefix.cls}">${prefix.text}</span><span class="cmd-text${type === 'success' ? ' highlight' : ''}">${text}</span>`;
+            }
+
+            output.appendChild(line);
+
+            // Add cursor back
+            const cursorDiv = document.createElement('div');
+            cursorDiv.className = 'cmd-line';
+            cursorDiv.innerHTML = `<span class="cmd-text"><span class="cmd-cursor"></span></span>`;
+            output.appendChild(cursorDiv);
+
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearCommandOutput() {
+            const output = document.getElementById('commandOutput');
+            output.innerHTML = '';
+            addCmdLine('命令输出已清空', 'system');
+        }
+
+        // ===== Console Logging =====
+        function logMessage(msg, type = 'info') {
+            const consoleEl = document.getElementById('consoleOutput');
+            const now = new Date();
+            const fmt = (n) => String(n).padStart(2, '0');
+            const time = `${fmt(now.getHours())}:${fmt(now.getMinutes())}:${fmt(now.getSeconds())}`;
+            const line = document.createElement('div');
+            line.innerHTML = `<span class="log-time">[${time}]</span><span class="log-${type}">${msg}</span>`;
+            consoleEl.appendChild(line);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        function clearConsole() {
+            document.getElementById('consoleOutput').innerHTML = '';
+            logMessage('控制台已清空', 'info');
+        }
+
+        // ===== Step State Management =====
+        function setStepState(stepNum, state) {
+            const items = document.querySelectorAll('.step-item');
+            items.forEach(item => {
+                const s = parseInt(item.dataset.step);
+                item.classList.remove('running', 'completed', 'active');
+                if (s === stepNum) {
+                    item.classList.add(state);
+                    if (state === 'running') {
+                        item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }
+            });
+        }
+
+        function clearAllStepStates() {
+            document.querySelectorAll('.step-item').forEach(item => {
+                item.classList.remove('running', 'completed', 'active');
+            });
+        }
+
+        function updateCollapsedProgress() {
+            const completed = document.querySelectorAll('.step-item.completed').length;
+            document.getElementById('collapsedDone').textContent = completed;
+        }
+
+        // ===== Run / Stop =====
+        function toggleRun() {
+            if (!isRunning) {
+                startRun();
+            }
+        }
+
+        function startRun() {
+            isRunning = true;
+            currentStep = 0;
+            currentLoopStep = 0;
+            stats = { likes: 0, comments: 0, collects: 0, follows: 0 };
+            document.getElementById('statLikes').textContent = '0';
+            document.getElementById('statComments').textContent = '0';
+            document.getElementById('statCollects').textContent = '0';
+            document.getElementById('statFollows').textContent = '0';
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('progressText').textContent = `0 / ${totalSteps}`;
+
+            clearAllStepStates();
+
+            const btn = document.getElementById('runBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            btn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:14px;height:14px;"><circle cx="12" cy="12" r="6"/></svg> 运行中...`;
+            btn.classList.add('running');
+            stopBtn.disabled = false;
+            stopBtn.style.opacity = '1';
+
+            const platform = document.getElementById('platformSelect').selectedOptions[0].text;
+
+            // Auto-switch to command view when running
+            switchView('cmd');
+
+            // Clear command output and start fresh
+            const cmdOutput = document.getElementById('commandOutput');
+            cmdOutput.innerHTML = '';
+
+            addCmdLine('═══════════════════════════════════', 'divider');
+            addCmdLine(`任务启动 | 平台: ${platform} | 温度: ${document.getElementById('tempValue').textContent}`, 'system');
+            addCmdLine(`最大步数: ${document.getElementById('maxSteps').value} | 循环: ${totalSteps} 次`, 'system');
+            addCmdLine('═══════════════════════════════════', 'divider');
+            addCmdLine('', 'divider');
+
+            logMessage(`━━━ 开始执行自动化任务 ━━━`, 'step');
+            logMessage(`目标平台: ${platform}`, 'info');
+
+            const ops = [];
+            if (document.getElementById('opLike').checked) ops.push('点赞');
+            if (document.getElementById('opComment').checked) ops.push('评论');
+            if (document.getElementById('opCollect').checked) ops.push('收藏');
+            if (document.getElementById('opFollow').checked) ops.push('关注');
+            logMessage(`操作类型: ${ops.join(', ')}`, 'info');
+
+            // Start simulation
+            runInterval = setInterval(simulateStep, 2500);
+            // Run first step immediately
+            simulateStep();
+        }
+
+        function simulateStep() {
+            if (currentStep >= totalSteps) {
+                stopRun();
+                addCmdLine('', 'divider');
+                addCmdLine('═══════════════════════════════════', 'divider');
+                addCmdLine(`任务完成！共执行 ${totalSteps} 次循环`, 'success');
+                addCmdLine(`点赞: ${stats.likes} | 评论: ${stats.comments} | 收藏: ${stats.collects} | 关注: ${stats.follows}`, 'success');
+                addCmdLine('═══════════════════════════════════', 'divider');
+                logMessage(`━━━ 任务执行完成！━━━`, 'success');
+                logMessage(`共执行 ${totalSteps} 次操作`, 'success');
+                return;
+            }
+
+            currentStep++;
+
+            // Map loop step to procedure step (steps 3-11 of the procedure, 9 steps per loop)
+            currentLoopStep = ((currentStep - 1) % 9) + 3;
+            const procStepNum = currentLoopStep;
+
+            // Update step list state
+            setStepState(procStepNum, 'running');
+            updateCollapsedProgress();
+
+            // Command output - thinking process
+            const thinkMessages = [
+                { step: 3, think: '分析发现页面布局，定位内容列表区域...', action: 'adb shell input swipe 540 1800 540 400 300', detail: '执行下滑手势，刷新推荐列表' },
+                { step: 4, think: '扫描列表中的笔记卡片，过滤已浏览项...', action: '解析页面DOM，提取笔记元素列表', detail: '随机选择第 N 篇未浏览笔记' },
+                { step: 5, think: '定位目标笔记卡片坐标，计算点击位置...', action: 'adb shell input tap 540 680', detail: '点击进入笔记详情页' },
+                { step: 6, think: '等待详情页加载，提取笔记文本内容...', action: 'ocr.capture() → text_parser.extract()', detail: '内容摘要: "关于杭州美食探店分享..."' },
+                { step: 7, think: '检测评论区入口，滚动至评论区...', action: 'adb shell input swipe 540 1600 540 800 200', detail: '评论区已加载，共 N 条评论' },
+                { step: 8, think: '读取评论内容，进行语义分析...', action: 'nlp.analyze(comments) → summary', detail: '评论热点: "价格实惠"、"环境不错"、"推荐打卡"' },
+                { step: 9, think: '结合笔记内容+评论上下文，生成AI评论...', action: 'llm.generate(prompt, temperature=0.2)', detail: '生成评论: "这家店看起来好棒！下次去杭州一定要试试 🍜"' },
+                { step: 10, think: '定位评论发送按钮，执行发送操作...', action: 'adb shell input tap 980 1750', detail: '评论发送成功，等待确认' },
+                { step: 11, think: '执行返回操作，回到发现页面...', action: 'adb shell input keyevent KEYCODE_BACK', detail: '已返回发现页面，准备下一轮' },
+            ];
+
+            const msg = thinkMessages.find(m => m.step === procStepNum) || thinkMessages[0];
+
+            addCmdLine(`── 第 ${currentStep}/${totalSteps} 轮 ──`, 'divider');
+            addCmdLine(`[思考] ${msg.think}`, 'think');
+
+            setTimeout(() => {
+                addCmdLine(`[执行] ${msg.action}`, 'action');
+            }, 400);
+
+            setTimeout(() => {
+                addCmdLine(`[结果] ${msg.detail}`, 'success');
+
+                // Mark step as completed
+                setStepState(procStepNum, 'completed');
+                updateCollapsedProgress();
+
+                // Random action simulation
+                setTimeout(() => {
+                    if (document.getElementById('opLike').checked && Math.random() > 0.3) {
+                        stats.likes++;
+                        document.getElementById('statLikes').textContent = stats.likes;
+                        addCmdLine('  → 点赞操作完成', 'success');
+                        logMessage(`  ✓ 点赞成功 (第${currentStep}轮)`, 'success');
+                    }
+                    if (document.getElementById('opComment').checked && Math.random() > 0.5) {
+                        stats.comments++;
+                        document.getElementById('statComments').textContent = stats.comments;
+                        const comments = ['这个分享太棒了！', '学到了很多，感谢分享~', '收藏了，回头慢慢看', '写得真好，很有帮助！', '太实用了，马上去试试'];
+                        const c = comments[Math.floor(Math.random() * comments.length)];
+                        addCmdLine(`  → 评论: "${c}"`, 'success');
+                        logMessage(`  ✓ 评论成功: "${c}"`, 'success');
+                    }
+                    if (document.getElementById('opCollect').checked && Math.random() > 0.6) {
+                        stats.collects++;
+                        document.getElementById('statCollects').textContent = stats.collects;
+                        addCmdLine('  → 收藏操作完成', 'success');
+                        logMessage(`  ✓ 收藏成功`, 'success');
+                    }
+                    if (document.getElementById('opFollow').checked && Math.random() > 0.8) {
+                        stats.follows++;
+                        document.getElementById('statFollows').textContent = stats.follows;
+                        addCmdLine('  → 关注操作完成', 'success');
+                        logMessage(`  ✓ 关注成功`, 'success');
+                    }
+                }, 300);
+
+            }, 900);
+
+            // Update progress
+            const pct = (currentStep / totalSteps) * 100;
+            document.getElementById('progressFill').style.width = pct + '%';
+            document.getElementById('progressText').textContent = `${currentStep} / ${totalSteps}`;
+        }
+
+        function stopRun() {
+            isRunning = false;
+            clearInterval(runInterval);
+            const btn = document.getElementById('runBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            btn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg> 运行`;
+            btn.classList.remove('running');
+            stopBtn.disabled = true;
+            stopBtn.style.opacity = '0.5';
+
+            // Clear running state from steps
+            document.querySelectorAll('.step-item.running').forEach(item => {
+                item.classList.remove('running');
+            });
+
+            if (currentStep > 0 && currentStep < totalSteps) {
+                addCmdLine('', 'divider');
+                addCmdLine(`任务已手动停止，已完成 ${currentStep}/${totalSteps} 轮`, 'error');
+                logMessage(`任务已停止，已完成 ${currentStep}/${totalSteps} 步`, 'warning');
+            }
+
+            // Auto-switch back to steps view when stopped
+            setTimeout(() => {
+                switchView('steps');
+            }, 500);
+        }
+
+        // ===== Device Actions =====
+        function refreshDevices() {
+            logMessage('正在扫描 ADB 设备...', 'info');
+            setTimeout(() => logMessage('ADB 扫描完成, 发现 1 台设备', 'success'), 1000);
+        }
+
+        function connectDevice() {
+            logMessage('正在连接设备 aaucrkg67pswu8qw...', 'info');
+            setTimeout(() => logMessage('设备连接成功', 'success'), 1200);
+        }
+
+        function deviceDetails() {
+            logMessage('获取设备信息...', 'info');
+            setTimeout(() => logMessage('设备型号: Pixel 7 | Android 14 | 分辨率: 1080×2400', 'info'), 800);
+        }
+
+        function installKeyboard() {
+            logMessage('正在安装 ADB 键盘...', 'info');
+            setTimeout(() => logMessage('ADB 键盘安装成功', 'success'), 1500);
+        }
+
+        function remoteDesktop() {
+            logMessage('正在启动远程桌面...', 'info');
+            setTimeout(() => logMessage('远程桌面已启动 (端口: 5555)', 'success'), 2000);
+        }
+
+        function screenshot() {
+            logMessage('正在截取设备屏幕...', 'info');
+            setTimeout(() => logMessage('截图已保存到本地', 'success'), 1000);
+        }
+
+        function wakeDevice() {
+            logMessage('发送唤醒指令...', 'info');
+            setTimeout(() => logMessage('设备已唤醒并解锁', 'success'), 800);
+        }
+
+        // ===== Config =====
+        function saveConfig() {
+            const config = {
+                platform: document.getElementById('platformSelect').value,
+                maxSteps: document.getElementById('maxSteps').value,
+                temperature: document.getElementById('temperature').value,
+                opLike: document.getElementById('opLike').checked,
+                opComment: document.getElementById('opComment').checked,
+                opCollect: document.getElementById('opCollect').checked,
+                opFollow: document.getElementById('opFollow').checked,
+            };
+            localStorage.setItem('autoflow_config', JSON.stringify(config));
+            logMessage('配置已保存到本地', 'success');
+        }
+
+        function loadConfig() {
+            const saved = localStorage.getItem('autoflow_config');
+            if (saved) {
+                const config = JSON.parse(saved);
+                document.getElementById('platformSelect').value = config.platform || 'xiaohongshu';
+                document.getElementById('maxSteps').value = config.maxSteps || 20000;
+                document.getElementById('temperature').value = config.temperature || 0.2;
+                updateTempValue(config.temperature || 0.2);
+                document.getElementById('opLike').checked = config.opLike !== false;
+                document.getElementById('opComment').checked = config.opComment === true;
+                document.getElementById('opCollect').checked = config.opCollect === true;
+                document.getElementById('opFollow').checked = config.opFollow === true;
+                logMessage('配置已从本地加载', 'success');
+            } else {
+                logMessage('未找到已保存的配置', 'warning');
+            }
+        }
+
+        // ===== AI Polish =====
+        function aiPolish() {
+            logMessage('AI 正在分析流程文本...', 'info');
+            setTimeout(() => logMessage('AI 润色完成，流程已优化', 'success'), 2000);
+        }
+
+        // ===== History =====
+        function showHistory() {
+            logMessage('━━━ 历史记录 ━━━', 'info');
+            logMessage('2025-04-08 14:20 | 小红书 | 点赞×15 评论×8 | 耗时 12:30', 'info');
+            logMessage('2025-04-07 09:15 | 小红书 | 点赞×20 评论×12 | 耗时 18:45', 'info');
+            logMessage('2025-04-06 16:00 | 抖音   | 点赞×10 评论×5  | 耗时 8:20', 'info');
+        }
+
+        // ===== Templates =====
+        function showTemplates() {
+            logMessage('可用模板:', 'info');
+            logMessage('  1. 小红书自动互动（点赞+评论）', 'info');
+            logMessage('  2. 抖音自动刷视频', 'info');
+            logMessage('  3. 微博自动转发+评论', 'info');
+            logMessage('  4. B站自动点赞+投币', 'info');
+        }
+    </script>
+</body>
+</html>

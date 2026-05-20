@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# PyInstaller
+*.spec
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Config with sensitive data
+config/ai_config.json
+
+# Server secrets
+server/.env
+*.db
+
+# License cache (client-side)
+license_cache.json
+
+# Build artifacts
+build/
+dist/
+
+# Screenshots
+assets/images/test_screenshot.png
+
+# WorkBuddy
+.workbuddy/
+
+# Legacy backup
+backups/
+
+# Other tool dirs
+.arts/
+.claude/
+.trae/
+.codeartsdoer/

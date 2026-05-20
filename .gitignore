@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.spec
+*.exe
+*.db
+*.db-shm
+*.db-wal
+
+# IDE
+.arts/
+.codeartsdoer/
+.trae/
+.claude/
+.codex/
+.gemini/
+.office-claw/
+
+# Environment
+.env
+
+# Logs
+logs/
+
+# Uploads
+.uploads/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Node
+node_modules/
+
+# Playwright browsers
+.playwright-browsers/
+
+# Backups
+backups/
+
+# Test/sample data (large docx files)
+word/
+word_md/
+
+# Binary/image assets (keep specific ones)
+*.dll
+*.pak
+*.dat
+*.so
+*.dylib
+
+# Memory DB files
+memory.db
+memory.db-shm
+memory.db-wal
+
+# PyInstaller
+*.manifest
+
+# Flet
+.flet/
