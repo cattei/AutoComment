@@ -70,11 +70,6 @@ class AutoFlowGUI:
 
         self.root.configure(fg_color=COLORS['bg_primary'])
 
-        # 默认全屏
-        self.root.state('zoomed')
-
-
-
         # 必须先初始化字体（CTkFont 需要 root 已创建）
 
         from gui.ui.styles import _init_fonts
@@ -1428,22 +1423,7 @@ class AutoFlowGUI:
 
 
         # ---- 运行 + 停止 (设计图: btn-primary 绿色 + btn-danger 红色) ----
-
-        self.stop_btn = ctk.CTkButton(inner, text="■ 停止", font=FONTS['body'],
-
-                                       fg_color=COLORS['accent_red'],
-
-                                       hover_color=COLORS['accent_red_hover'],
-
-                                       text_color='white',
-
-                                       corner_radius=SIZES['radius_sm'],
-
-                                       width=200, height=36,
-                                       state='disabled',
-                                       command=self.stop_run)
-
-        self.stop_btn.pack(side='left', padx=(0, 8))
+        # 运行按钮在最右，停止按钮在左侧
 
         self.run_btn = ctk.CTkButton(inner, text="▶ 运行", font=FONTS['body'],
                                       fg_color=COLORS['accent_green'],
@@ -1451,10 +1431,20 @@ class AutoFlowGUI:
                                       text_color='white',
                                       corner_radius=SIZES['radius_sm'],
                                       width=200, height=36,
-
                                       command=self.start_run)
 
-        self.run_btn.pack(side='left')
+        self.run_btn.pack(side='right')
+
+        self.stop_btn = ctk.CTkButton(inner, text="■ 停止", font=FONTS['body'],
+                                       fg_color=COLORS['accent_red'],
+                                       hover_color=COLORS['accent_red_hover'],
+                                       text_color='white',
+                                       corner_radius=SIZES['radius_sm'],
+                                       width=200, height=36,
+                                       state='disabled',
+                                       command=self.stop_run)
+
+        self.stop_btn.pack(side='right', padx=(0, 8))
 
 
 

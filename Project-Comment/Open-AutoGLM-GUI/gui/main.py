@@ -24,6 +24,7 @@ def main():
     """主函数"""
     root = ctk.CTk()
     app = AutoFlowGUI(root)
+    root.after(1, lambda: root.state('zoomed'))
     root.mainloop()
 
 
